@@ -1,4 +1,4 @@
-# 🌴 Gemini-Worktree
+# 🔷 Gemini-Worktree
 
 Run multiple Gemini Code instances in parallel without stepping on each other. This CLI creates isolated git worktrees for each Gemini session, so you can work on different features simultaneously while keeping your main branch clean.
 
