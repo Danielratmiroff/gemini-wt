@@ -21,7 +21,7 @@ wheels = [
 ]
 
 [[package]]
-name = "claude-wt"
+name = "gemini-wt"
 source = { editable = "." }
 dependencies = [
     { name = "cyclopts" },

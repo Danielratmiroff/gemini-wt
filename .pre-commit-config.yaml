@@ -1,7 +1,6 @@
 fail_fast: false
 
 repos:
-
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
     rev: v0.12.2
@@ -16,4 +15,4 @@ repos:
     rev: v0.1.0
     hooks:
       - id: pyright-pretty
-        files: ^claude_wt/
+        files: ^gemini_wt/

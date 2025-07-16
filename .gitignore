@@ -159,5 +159,8 @@ cython_debug/
 #  https://www.jetbrains.com/help/pycharm/managing-your-project-under-version-control.html
 .idea/
 
-# Claude worktree management
-.claude-wt/worktrees
+# Gemini worktree management
+.gemini/worktrees
+
+# Gemini worktree management
+.gemini-wt/worktrees

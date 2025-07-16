@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 from datetime import datetime
@@ -8,12 +9,12 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-app = App(help="Claude worktree management CLI")
+app = App(help="Gemini worktree management CLI")
 console = Console()
 
 
 def check_gitignore(repo_root: Path) -> bool:
-    """Check if .claude-wt/worktrees is in .gitignore"""
+    """Check if .gemini-wt/worktrees is in .gitignore"""
     gitignore_path = repo_root / ".gitignore"
     if not gitignore_path.exists():
         return False
@@ -24,10 +25,10 @@ def check_gitignore(repo_root: Path) -> bool:
 
     for line in lines:
         if line in [
-            ".claude-wt/worktrees",
-            ".claude-wt/worktrees/",
-            ".claude-wt/*",
-            ".claude-wt/**",
+            ".gemini-wt/worktrees",
+            ".gemini-wt/worktrees/",
+            ".gemini-wt/*",
+            ".gemini-wt/**",
         ]:
             return True
 
@@ -40,12 +41,12 @@ def new(
     branch: str = "",
     name: str = "",
 ):
-    """Create a new worktree and launch Claude.
+    """Create a new worktree and launch Gemini.
 
     Parameters
     ----------
     query : str
-        Query to send to Claude
+        Query to send to Gemini
     branch : str
         Source branch to create worktree from
     name : str
@@ -60,13 +61,13 @@ def new(
     )
     repo_root = Path(result.stdout.strip())
 
-    # Check if .claude-wt/worktrees is in .gitignore
+    # Check if .gemini-wt/worktrees is in .gitignore
     if not check_gitignore(repo_root):
-        panel_content = """Claude-wt creates worktrees in your repo at [cyan].claude-wt/worktrees[/cyan].
+        panel_content = """gemini creates worktrees in your repo at [cyan].gemini-wt/worktrees[/cyan].
 
 This directory must be added to .gitignore to prevent committing worktree data.
 
-[yellow]→[/yellow] Please run [bold]claude-wt init[/bold] to automatically add .claude-wt/worktrees to .gitignore"""
+[yellow]→[/yellow] Please run [bold]gemini init[/bold] to automatically add .gemini-wt/worktrees to .gitignore"""
 
         console.print(
             Panel(
@@ -91,7 +92,8 @@ This directory must be added to .gitignore to prevent committing worktree data.
         source_branch = result.stdout.strip()
 
     # Sync with origin
-    subprocess.run(["git", "-C", str(repo_root), "fetch", "origin"], check=True)
+    subprocess.run(["git", "-C", str(repo_root),
+                   "fetch", "origin"], check=True)
     subprocess.run(
         ["git", "-C", str(repo_root), "switch", "--quiet", source_branch], check=True
     )
@@ -102,7 +104,7 @@ This directory must be added to .gitignore to prevent committing worktree data.
     # Generate worktree branch name
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     suffix = name or timestamp
-    branch_name = f"claude-wt-{suffix}"
+    branch_name = f"gemini-wt-{suffix}"
 
     # Create branch if needed
     try:
@@ -120,12 +122,13 @@ This directory must be added to .gitignore to prevent committing worktree data.
         )
     except subprocess.CalledProcessError:
         subprocess.run(
-            ["git", "-C", str(repo_root), "branch", branch_name, source_branch],
+            ["git", "-C", str(repo_root), "branch",
+             branch_name, source_branch],
             check=True,
         )
 
     # Setup worktree path
-    wt_path = repo_root / ".claude-wt" / "worktrees" / branch_name
+    wt_path = repo_root / ".gemini-wt" / "worktrees" / branch_name
     wt_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Create worktree if needed
@@ -147,9 +150,9 @@ This directory must be added to .gitignore to prevent committing worktree data.
     # Print helpful info
     panel_content = f"""[dim]Source branch:[/dim] [cyan]{source_branch}[/cyan]
 
-[green]🟢 Resume this session:[/green] [bold]claude-wt resume {suffix}[/bold]
-[blue]🧹 Delete this session:[/blue] [bold]claude-wt clean {suffix}[/bold]
-[red]🧨 Delete all sessions:[/red] [bold]claude-wt clean --all[/bold]"""
+[green]🟢 Resume this session:[/green] [bold]gemini-wt resume {suffix}[/bold]
+[blue]🧹 Delete this session:[/blue] [bold]gemini-wt clean {suffix}[/bold]
+[red]🧨 Delete all sessions:[/red] [bold]gemini-wt clean --all[/bold]"""
 
     console.print(
         Panel(
@@ -160,13 +163,16 @@ This directory must be added to .gitignore to prevent committing worktree data.
         )
     )
 
-    # Launch Claude
-    claude_path = shutil.which("claude") or "/Users/jlowin/.claude/local/claude"
-    claude_cmd = [claude_path, "--add-dir", str(repo_root)]
+    # Launch Gemini
+    gemini_path = shutil.which("gemini")
+    if not gemini_path:
+        console.print("[red]Error: gemini not found[/red]")
+        raise SystemExit(1)
+    gemini_cmd = [gemini_path]
     if query:
-        claude_cmd.extend(["--", query])
+        gemini_cmd.extend(["--prompt", query])
 
-    subprocess.run(claude_cmd, cwd=wt_path)
+    subprocess.run(gemini_cmd, cwd=wt_path, check=True)
 
 
 @app.command
@@ -189,7 +195,7 @@ def resume(branch_name: str):
         repo_root = Path(result.stdout.strip())
 
         # Find worktree path using git
-        full_branch_name = f"claude-wt-{branch_name}"
+        full_branch_name = f"gemini-{branch_name}"
         result = subprocess.run(
             ["git", "-C", str(repo_root), "worktree", "list", "--porcelain"],
             capture_output=True,
@@ -223,10 +229,13 @@ def resume(branch_name: str):
             f"[yellow]🔄 Resuming session for branch:[/yellow] [bold]{branch_name}[/bold]"
         )
 
-        # Launch Claude with --continue to resume conversation
-        claude_path = shutil.which("claude") or "/Users/jlowin/.claude/local/claude"
-        claude_cmd = [claude_path, "--add-dir", str(repo_root), "--continue"]
-        subprocess.run(claude_cmd, cwd=wt_path)
+        gemini_path = shutil.which("gemini")
+        if not gemini_path:
+            console.print("[red]Error: gemini not found[/red]")
+            raise SystemExit(1)
+        gemini_cmd = [gemini_path]
+        subprocess.run(["cd", str(wt_path)], check=True)
+        subprocess.run(gemini_cmd)
 
     except subprocess.CalledProcessError as e:
         console.print(f"[red]Error: {e}[/red]")
@@ -241,14 +250,14 @@ def clean(
     branch_name: str = "",
     all: bool = False,
 ):
-    """Delete claude-wt worktrees and branches.
+    """Delete gemini worktrees and branches.
 
     Parameters
     ----------
     branch_name : str
         Specific branch to clean
     all : bool
-        Clean all claude-wt sessions
+        Clean all gemini sessions
     """
     try:
         # Require either branch_name or --all
@@ -272,11 +281,11 @@ def clean(
             check=True,
         )
         repo_root = Path(result.stdout.strip())
-        wt_root = repo_root / ".claude-wt" / "worktrees"
+        wt_root = repo_root / ".gemini-wt" / "worktrees"
 
         if branch_name:
             # Clean specific branch
-            full_branch_name = f"claude-wt-{branch_name}"
+            full_branch_name = f"gemini-{branch_name}"
             wt_path = wt_root / full_branch_name
 
             # Remove worktree
@@ -298,19 +307,21 @@ def clean(
             # Delete branch
             try:
                 subprocess.run(
-                    ["git", "-C", str(repo_root), "branch", "-D", full_branch_name],
+                    ["git", "-C", str(repo_root), "branch",
+                     "-D", full_branch_name],
                     check=True,
                 )
-                console.print(f"[green]✅ Deleted branch:[/green] {full_branch_name}")
+                console.print(
+                    f"[green]✅ Deleted branch:[/green] {full_branch_name}")
             except subprocess.CalledProcessError:
                 console.print(
                     f"[yellow]⚠️  Branch {full_branch_name} not found[/yellow]"
                 )
         else:
-            # Clean all claude-wt branches/worktrees
-            with console.status("[bold cyan]Cleaning all claude-wt sessions..."):
-                # Get all worktrees from git and remove claude-wt ones
-                console.print("[cyan]Removing claude-wt worktrees...[/cyan]")
+            # Clean all gemini branches/worktrees
+            with console.status("[bold cyan]Cleaning all gemini sessions..."):
+                # Get all worktrees from git and remove gemini ones
+                console.print("[cyan]Removing gemini worktrees...[/cyan]")
                 try:
                     result = subprocess.run(
                         [
@@ -326,7 +337,7 @@ def clean(
                         check=True,
                     )
 
-                    # Parse worktree list to find claude-wt worktrees
+                    # Parse worktree list to find gemini worktrees
                     worktrees = []
                     current_wt = {}
                     for line in result.stdout.split("\n"):
@@ -339,10 +350,10 @@ def clean(
                     if current_wt:
                         worktrees.append(current_wt)
 
-                    # Remove claude-wt worktrees
+                    # Remove gemini worktrees
                     for wt in worktrees:
                         branch_name = wt.get("branch", "")
-                        if branch_name.startswith("claude-wt-"):
+                        if branch_name.startswith("gemini-"):
                             try:
                                 subprocess.run(
                                     [
@@ -367,7 +378,7 @@ def clean(
                     console.print("  [yellow]No worktrees found[/yellow]")
 
                 # Delete branches
-                console.print("[cyan]Deleting claude-wt branches...[/cyan]")
+                console.print("[cyan]Deleting gemini branches...[/cyan]")
                 try:
                     result = subprocess.run(
                         [
@@ -376,7 +387,7 @@ def clean(
                             str(repo_root),
                             "branch",
                             "--list",
-                            "claude-wt-*",
+                            "gemini-*",
                         ],
                         capture_output=True,
                         text=True,
@@ -410,7 +421,8 @@ def clean(
                                     f"  [red]❌ Failed to delete branch {branch}[/red]"
                                 )
                 except subprocess.CalledProcessError:
-                    console.print("  [yellow]No claude-wt-* branches found[/yellow]")
+                    console.print(
+                        "  [yellow]No gemini-* branches found[/yellow]")
 
             console.print("[green bold]🧹 Cleanup complete![/green bold]")
 
@@ -424,7 +436,7 @@ def clean(
 
 @app.command
 def list():
-    """List all claude-wt worktrees."""
+    """List all gemini worktrees."""
     try:
         # Get repo root
         result = subprocess.run(
@@ -457,30 +469,31 @@ def list():
         if current_wt:
             worktrees.append(current_wt)
 
-        # Filter for claude-wt worktrees
-        claude_worktrees = [
-            wt for wt in worktrees if wt.get("branch", "").startswith("claude-wt-")
+        # Filter for gemini worktrees
+        gemini_worktrees = [
+            wt for wt in worktrees if wt.get("branch", "").startswith("gemini-")
         ]
 
-        if not claude_worktrees:
-            console.print("[yellow]No claude-wt worktrees found.[/yellow]")
+        if not gemini_worktrees:
+            console.print("[yellow]No gemini worktrees found.[/yellow]")
             return
 
         # Create table
         table = Table(
-            title=f"Claude-wt worktrees for [bold cyan]{repo_name}[/bold cyan]"
+            title=f"gemini worktrees for [bold cyan]{repo_name}[/bold cyan]"
         )
         table.add_column("Status", style="green", justify="center")
         table.add_column("Session", style="cyan", min_width=15)
         table.add_column("Path", style="dim", overflow="fold")
 
-        for wt in sorted(claude_worktrees, key=lambda x: x.get("branch", "")):
+        for wt in sorted(gemini_worktrees, key=lambda x: x.get("branch", "")):
             branch_name = wt.get("branch", "")
-            suffix = branch_name.replace("claude-wt-", "")
+            suffix = branch_name.replace("gemini-", "")
             wt_path = wt["path"]
 
             # Check if worktree path still exists
-            status = "[green]✅[/green]" if Path(wt_path).exists() else "[red]❌[/red]"
+            status = "[green]✅[/green]" if Path(
+                wt_path).exists() else "[red]❌[/red]"
 
             table.add_row(status, suffix, wt_path)
 
@@ -496,7 +509,7 @@ def list():
 
 @app.command
 def init():
-    """Initialize claude-wt for this repository."""
+    """Initialize gemini for this repository."""
     try:
         # Get repo root
         result = subprocess.run(
@@ -510,7 +523,7 @@ def init():
         # Check if already in gitignore
         if check_gitignore(repo_root):
             console.print(
-                "[green]✅ .claude-wt/worktrees is already in .gitignore[/green]"
+                "[green]✅ .gemini-wt/worktrees is already in .gitignore[/green]"
             )
             return
 
@@ -527,13 +540,14 @@ def init():
 
         # Add the ignore entry
         new_content = (
-            existing_content + "\n# Claude worktree management\n.claude-wt/worktrees\n"
+            existing_content + "\n# Gemini worktree management\n.gemini-wt/worktrees\n"
         )
 
         # Write back to file
         gitignore_path.write_text(new_content)
 
-        console.print("[green]✅ Added .claude-wt/worktrees to .gitignore[/green]")
+        console.print(
+            "[green]✅ Added .gemini-wt/worktrees to .gitignore[/green]")
 
     except subprocess.CalledProcessError as e:
         console.print(f"[red]Error: {e}[/red]")
@@ -546,7 +560,7 @@ def init():
 @app.command
 def version():
     """Show version information."""
-    console.print("claude-wt 0.1.0")
+    console.print("gemini 0.1.0")
 
 
 if __name__ == "__main__":

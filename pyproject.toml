@@ -1,12 +1,12 @@
 [project]
-name = "claude-wt"
+name = "gemini-wt"
 dynamic = ["version"]
-description = "Utility for running Claude Code in parallel and managing dedicated git worktrees."
+description = "Manage parallel Gemini CLI instances"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["cyclopts>=3.0.0", "rich>=13.0.0"]
-keywords = ["claude", "git", "ai"]
-authors = [{ name = "Jeremiah Lowin" }]
+keywords = ["gemini", "git", "ai"]
+authors = [{ name = "Daniel Ratmiroff" }]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -14,10 +14,10 @@ classifiers = [
 ]
 
 [project.scripts]
-claude-wt = "claude_wt.cli:app"
+gemini-wt = "gemini_wt.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/jlowin/claude-wt"
+Homepage = "https://github.com/Danielratmiroff/gemini-wt"
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning>=0.7.0"]
@@ -37,7 +37,7 @@ dev = ["pre-commit>=4.2.0", "pyright>=1.1.402"]
 
 
 [tool.pyright]
-include = ["claude_wt"]
+include = ["gemini_wt"]
 exclude = ["**/node_modules", "**/__pycache__", ".venv", ".git", "dist"]
 pythonVersion = "3.10"
 pythonPlatform = "Darwin"
