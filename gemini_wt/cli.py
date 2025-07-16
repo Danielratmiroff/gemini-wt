@@ -1,4 +1,3 @@
-import os
 import shutil
 import subprocess
 from datetime import datetime
@@ -92,8 +91,7 @@ This directory must be added to .gitignore to prevent committing worktree data.
         source_branch = result.stdout.strip()
 
     # Sync with origin
-    subprocess.run(["git", "-C", str(repo_root),
-                   "fetch", "origin"], check=True)
+    subprocess.run(["git", "-C", str(repo_root), "fetch", "origin"], check=True)
     subprocess.run(
         ["git", "-C", str(repo_root), "switch", "--quiet", source_branch], check=True
     )
@@ -122,8 +120,7 @@ This directory must be added to .gitignore to prevent committing worktree data.
         )
     except subprocess.CalledProcessError:
         subprocess.run(
-            ["git", "-C", str(repo_root), "branch",
-             branch_name, source_branch],
+            ["git", "-C", str(repo_root), "branch", branch_name, source_branch],
             check=True,
         )
 
@@ -307,12 +304,10 @@ def clean(
             # Delete branch
             try:
                 subprocess.run(
-                    ["git", "-C", str(repo_root), "branch",
-                     "-D", full_branch_name],
+                    ["git", "-C", str(repo_root), "branch", "-D", full_branch_name],
                     check=True,
                 )
-                console.print(
-                    f"[green]✅ Deleted branch:[/green] {full_branch_name}")
+                console.print(f"[green]✅ Deleted branch:[/green] {full_branch_name}")
             except subprocess.CalledProcessError:
                 console.print(
                     f"[yellow]⚠️  Branch {full_branch_name} not found[/yellow]"
@@ -421,8 +416,7 @@ def clean(
                                     f"  [red]❌ Failed to delete branch {branch}[/red]"
                                 )
                 except subprocess.CalledProcessError:
-                    console.print(
-                        "  [yellow]No gemini-* branches found[/yellow]")
+                    console.print("  [yellow]No gemini-* branches found[/yellow]")
 
             console.print("[green bold]🧹 Cleanup complete![/green bold]")
 
@@ -479,9 +473,7 @@ def list():
             return
 
         # Create table
-        table = Table(
-            title=f"gemini worktrees for [bold cyan]{repo_name}[/bold cyan]"
-        )
+        table = Table(title=f"gemini worktrees for [bold cyan]{repo_name}[/bold cyan]")
         table.add_column("Status", style="green", justify="center")
         table.add_column("Session", style="cyan", min_width=15)
         table.add_column("Path", style="dim", overflow="fold")
@@ -492,8 +484,7 @@ def list():
             wt_path = wt["path"]
 
             # Check if worktree path still exists
-            status = "[green]✅[/green]" if Path(
-                wt_path).exists() else "[red]❌[/red]"
+            status = "[green]✅[/green]" if Path(wt_path).exists() else "[red]❌[/red]"
 
             table.add_row(status, suffix, wt_path)
 
@@ -546,8 +537,7 @@ def init():
         # Write back to file
         gitignore_path.write_text(new_content)
 
-        console.print(
-            "[green]✅ Added .gemini-wt/worktrees to .gitignore[/green]")
+        console.print("[green]✅ Added .gemini-wt/worktrees to .gitignore[/green]")
 
     except subprocess.CalledProcessError as e:
         console.print(f"[red]Error: {e}[/red]")
