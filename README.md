@@ -2,7 +2,7 @@
 
 Run multiple Gemini Code instances in parallel without stepping on each other. This CLI creates isolated git worktrees for each Gemini session, so you can work on different features simultaneously while keeping your main branch clean.
 
-_Inspired and forked from a utility by [Jeremiah Lowin](https://github.com/jlowin/claude-wt)._
+_This is a fork of [claude-wt](https://github.com/jlowin/claude-wt) that works with Gemini instead of Claude. Inspired by [Jeremiah Lowin](https://github.com/jlowin/claude-wt)._
 
 ## 🚀 Quick Start
 
